@@ -55,6 +55,7 @@ class DogCeoApi:
 
         Args:
             breed (str): Название породы
+            count (int): Кол-во картинок для скачивания
             subbreed (str, optional): Название Подпороды. По-умолчанию: "".
 
         Raises:
