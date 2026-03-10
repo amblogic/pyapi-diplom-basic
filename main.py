@@ -1,18 +1,28 @@
 from poligon_api import YaDiskApi
 from dog_ceo_api import DogCeoApi
-from pathlib import Path
-import os
-import sys
-from pprint import pprint
+from progress.bar import Bar
 from settings import yd_token
+import pprint
 
-folder_path = input("Введите названием породы на английском: ")
-local_path = Path(folder_path)
-disk_folder = f"бэкап_{local_path.name}"
+try:
+    # breed = input("Введите названием породы на английском: ")
+    count = input("Введите количество загружаемых картинок: (по-умолчанию: 1): ") or 1
+    breed = "bulldog"
+    dog_api = DogCeoApi()
+    dog_images = dog_api.get_breed_images(breed, count)
+    if not dog_images:
+        raise RuntimeError(f"Не удалось загрузить картинки к породе {breed}")
+    # token = input("Введите токен Полигона ЯД: ")
 
-if not local_path.exists() or not local_path.is_dir():
-    print("Указан неверный путь")
-    sys.exit(1)
-
-yad_client = YaDiskApi(yd_token)
-yad_client.create_folder(disk_folder)
+    print(f"Для данной породы будет загружено картинок: {len(dog_images)} шт.")
+    yad_folder = breed
+    yad_client = YaDiskApi(yd_token)
+    yad_client.create_folder(yad_folder)
+    bar = Bar("Загрузка", max=len(dog_images))
+    for image in dog_images:
+        disk_file_path = f'{yad_folder}/{image.get("file_name")}'
+        yad_client.upload_file_by_url(image.get("url"), disk_file_path)
+        bar.next()
+    bar.finish()
+except (RuntimeError, TypeError) as err:
+    print(f"Ошибка: {err}")

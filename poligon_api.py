@@ -36,12 +36,28 @@ class YaDiskApi:
         Raises:
             RuntimeError: Ошибки при работе загрузке файла
         """
-        params = ({"path": disk_path, "url": url},)
+
         response = requests.post(
             f"{self.BASE_URL}/v1/disk/resources/upload",
             headers=self.headers,
-            json=params,
+            params={"path": disk_path, "url": url},
         )
 
-        if response.status_code not in (201, 409):
+        res = response.json()
+        if response.status_code not in (202, 409):
+            print(response)
+            raise RuntimeError(
+                f"Не удалось загрузить файл {url}. ({res.get("message","")})"
+            )
+
+        if res["href"]:
+            upload_response = requests.get(
+                res["href"],
+                headers=self.headers,
+            )
+        else:
+            raise RuntimeError(f"Не удалось получить ссылку загрузки")
+
+        if upload_response.status_code != 200:
+            print(upload_response)
             raise RuntimeError(f"Не удалось загрузить файл {url}")
