@@ -49,7 +49,7 @@ class DogCeoApi:
 
         return self.breed_images
 
-    def get_image(self, breed, count, subbreed="") -> dict:
+    def get_image(self, breed, count, subbreed="") -> list:
         """Получает ссылку на картинку и формирует словарь
             с названием файла и url для скачивания
 
