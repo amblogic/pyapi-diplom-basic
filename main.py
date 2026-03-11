@@ -8,19 +8,26 @@ try:
     breed = input("Введите названием породы на английском: ")
     if not re.match(r"^[A-Za-z]+$", breed):
         raise RuntimeError(f"название введено неверно")
-    count = (
-        input("Введите количество загружаемых картинок от 1 до 5: (по-умолчанию: 1): ")
-        or 1
-    )
+    sub_breeds = DogCeoApi.get_sub_breeds(breed)
+    if sub_breeds:
+        print(f"Для данной породы найдено: {len(sub_breeds)} подпород.\n")
+        inp_text = (
+            "Введите количество загружаемых картинок для каждой подпороды"
+            " от 1 до 5: (по-умолчанию: 1): "
+        )
+    else:
+        inp_text = (
+            "Введите количество загружаемых картинок от 1 до 5: (по-умолчанию: 1): "
+        )
+    count = input(inp_text) or 1
 
     if not re.match(r"^[1-5]?$", count):
         count = 1
         print("Количество введено неверно. Будет загружена 1 картинка")
     else:
         count = int(count)
-    dog_api = DogCeoApi()
     print("Поиск...")
-    dog_images = dog_api.get_breed_images(breed, count)
+    dog_images = DogCeoApi.get_breed_images(breed, sub_breeds, count)
     if not dog_images:
         raise RuntimeError(f"Не удалось загрузить картинки к породе {breed}")
     yd_token = input("Введите токен Полигона ЯД: ")

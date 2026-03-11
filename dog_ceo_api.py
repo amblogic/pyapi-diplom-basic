@@ -7,9 +7,9 @@ class DogCeoApi:
     BASE_URL = "https://dog.ceo/api/breed"
     """Класс для работы с API ресурса dog.ceo
     """
-    breed_images = []
 
-    def get_sub_breeds(self, breed) -> list:
+    @staticmethod
+    def get_sub_breeds(breed) -> list:
         """Получает суб-породы по названию основной породы
 
         Args:
@@ -22,34 +22,37 @@ class DogCeoApi:
             list: список подпород. Пустой если подпород нет
         """
         response = requests.get(
-            f"{self.BASE_URL}/{breed}/list",
+            f"{DogCeoApi.BASE_URL}/{breed}/list",
         )
         res = response.json()
         if not res["status"]:
             raise RuntimeError(f"Не удалось получить список пород '{breed}'")
         return res.get("message", [])
 
-    def get_breed_images(self, breed, count=1) -> list:
+    @staticmethod
+    def get_breed_images(breed, subbreeds, count=1) -> list:
         """Функция получает список URL картинок для породы
 
         Args:
             breed (str): Название породы
+            subbreeds (list): Подпороды
             count (int, optional): Кол-во картинок для загрузки. По-умолчанию: 1.
         Returns:
             list: список url для загрузки
         """
         #  сначала запросим есть ли суб-породы
-        subbreeds = self.get_sub_breeds(breed)
+        breed_images = []
 
         if not subbreeds:
-            self.breed_images += self.get_image(breed, count)
+            breed_images += DogCeoApi.__get_image(breed, count)
         else:
             for subbreed in subbreeds:
-                self.breed_images += self.get_image(breed, count, subbreed)
+                breed_images += DogCeoApi.__get_image(breed, count, subbreed)
 
-        return self.breed_images
+        return breed_images
 
-    def get_image(self, breed, count, subbreed="") -> list:
+    @staticmethod
+    def __get_image(breed, count, subbreed="") -> list:
         """Получает ссылку на картинку и формирует словарь
             с названием файла и url для скачивания
 
@@ -69,14 +72,14 @@ class DogCeoApi:
             if subbreed
             else f"{breed}/images/random/{count}"
         )
-        response = requests.get(f"{self.BASE_URL}/{method}")
+        response = requests.get(f"{DogCeoApi.BASE_URL}/{method}")
         res = response.json()
 
         if response.status_code == 404 and res["message"]:
             raise RuntimeError(f"Такой породы не существует")
         if response.status_code != 200:
             raise RuntimeError(
-                f"Не удалось получить выполнить запрос: {url}. ({res.get("message","")})"
+                f"Не удалось получить выполнить запрос на получение картинок. ({res.get("message","")})"
             )
         # сразу сформируем название файла, т.к. для под-породы оно другое
         breed_dict = []
